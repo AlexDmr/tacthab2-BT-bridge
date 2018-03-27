@@ -44,8 +44,8 @@ export class BLEDevice {
         return {
             name: this.name,
             isConnected: this.isConnected,
-            services: this.services.map(S => S.toString() ),
-            characteristics: this.characteristics.map(C => C.toString() )
+            services: this.services ? this.services.map(S => S.toString() ) : [],
+            characteristics: this.characteristics ? this.characteristics.map(C => C.toString() ) : []
         };
     }
 

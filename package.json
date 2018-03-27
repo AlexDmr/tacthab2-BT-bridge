@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "compile": "node ./node_modules/typescript/bin/tsc",
-    "lint": "node ./node_modules/tslint/bin/tslint --config \"./tslint.json\" \"ts/**/*.ts\""
+    "lint": "node ./node_modules/tslint/bin/tslint --config \"./tslint.json\" \"ts/**/*.ts\"",
+    "start": "node ./build_ES2015_CommonJS/main.js"
   },
   "author": "",
   "license": "ISC",
