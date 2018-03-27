@@ -43,11 +43,25 @@ export class BLEDevice {
     toJSON() {
         return {
             name: this.name,
+            uuid: this.peripheral.uuid,
             isConnected: this.isConnected.getValue(),
-            services: this.services ? this.services.map(S => S.toString() ) : [],
-            characteristics: this.characteristics ? this.characteristics.map(C => C.toString() ) : []
+            services: this.services ? this.services.map(S => ({
+				name: S.name,
+				uuid: S.uuid,
+				type: S.type
+            }) ) : [],
+            characteristics: this.characteristics ? this.characteristics.map(C => ({
+				name: C.name,
+				uuid: C.uuid,
+				type: C.type,
+				properties: C.properties
+            }) ) : []
         };
     }
+
+	getUUID(): string {
+		return this.peripheral.uuid;
+	}
 
     getIsConnected(): {connected: boolean, obs: Observable<boolean>} {
         return {
@@ -57,7 +71,7 @@ export class BLEDevice {
     }
 
     getNotifications(): Observable<CHARACTERISTIC_NOTIFICATION> {
-        return this.notifications.asObservable();
+        return this.notifications.asObservable().filter(N => !!N);
     }
 
     getName(): string {

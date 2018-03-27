@@ -21,7 +21,7 @@ export class MetaWear extends BLEDevice {
     constructor(peripheral: noble.Peripheral) {
         super(peripheral);
 
-        this.metaWearNotifications = this.getNotifications().map( N => ({
+        this.metaWearNotifications = super.getNotifications().map( N => ({
             ...N,
             module: N.data.readUInt8(0),
             eventType: N.data.readUInt8(1)
@@ -49,7 +49,9 @@ export class MetaWear extends BLEDevice {
 
 registerBleInstanciator( (peripheral: noble.Peripheral) => {
     const localName: string = peripheral.advertisement ? peripheral.advertisement.localName : "";
+    // console.log( "Is", localName, "a metawear device ?" );
     if (localName && localName.toLocaleLowerCase() === 'metawear') {
+		console.log( "CREATE a METAWEAR !" );
         return new MetaWear(peripheral);
     } else {
         return undefined;

@@ -5,6 +5,7 @@ import * as socketIO from "socket.io";          // Websocket server
 import * as noble from "noble";
 import {BLEDevice} from "./Devices/BLE";
 import {instantiatePeripheral} from "./Devices/Instantiators";
+import "./Devices/MetaWear/BrickMetaWear";
 
 export const app: express.Application = express();
 
@@ -45,6 +46,27 @@ app.post("/scanning", (req, res) => {
         noble.stopScanning();
     }
 });
+
+function connectToDevice(req, res) {
+	const uuid = req.query["uuid"] || req.body["uuid"];
+	if (uuid) {
+		const device = devices.find( D => D.getUUID() === uuid );
+		if (device) {
+			device.connect().then(
+				() => res.json( device.toJSON() ),
+				err => res.status(500, err)
+			);
+		} else {
+			res.status(400).end(`There is no device having uuid ${uuid}`);
+		}
+	} else {
+		res.status(400).end("a uuid should be specified");
+	}
+}
+
+app.get ("/connect", connectToDevice);
+app.post("/connect", connectToDevice);
+
 
 /* Define Socket.IO API */
 const ioHTTP  = socketIO(serverHTTP );
