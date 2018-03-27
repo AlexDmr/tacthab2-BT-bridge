@@ -69,6 +69,7 @@ noble.on('stateChange', state => {
 });
 
 noble.on( 'discover', (peripheral: noble.Peripheral) => {
+    console.log("Discover", peripheral.advertisement, peripheral.uuid);
     const device = instantiatePeripheral(peripheral);
     if (device) {
         devices.push(device);
