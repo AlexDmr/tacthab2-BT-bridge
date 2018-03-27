@@ -43,7 +43,7 @@ export class BLEDevice {
     toJSON() {
         return {
             name: this.name,
-            isConnected: this.isConnected,
+            isConnected: this.isConnected.getValue(),
             services: this.services ? this.services.map(S => S.toString() ) : [],
             characteristics: this.characteristics ? this.characteristics.map(C => C.toString() ) : []
         };

@@ -2,6 +2,7 @@ import {BLEDevice, CHARACTERISTIC_NOTIFICATION} from "../BLE";
 import * as noble from "noble";
 import * as defs from "./BrickMetaWear_defs";
 import {BehaviorSubject, Observable} from "@reactivex/rxjs";
+import {registerBleInstanciator} from "../Instantiators";
 
 const bufferSubscribeSwitch = new Buffer(3);
 bufferSubscribeSwitch[0] = 1;
@@ -45,6 +46,16 @@ export class MetaWear extends BLEDevice {
     }
 
 }
+
+registerBleInstanciator( (peripheral: noble.Peripheral) => {
+    const localName: string = peripheral.advertisement ? peripheral.advertisement.localName : "";
+    if (localName && localName.toLocaleLowerCase() === 'metawear') {
+        return new MetaWear(peripheral);
+    } else {
+        return undefined;
+    }
+});
+
 /*
 BrickMetaWear.is 	= function(peripheral) {
   var localName = peripheral.advertisement?peripheral.advertisement.localName:"";

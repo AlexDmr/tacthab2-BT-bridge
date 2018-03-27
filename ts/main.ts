@@ -4,6 +4,7 @@ import * as bodyParser from "body-parser";      // Parse HTTP GET and POST varia
 import * as socketIO from "socket.io";          // Websocket server
 import * as noble from "noble";
 import {BLEDevice} from "./Devices/BLE";
+import {instantiatePeripheral} from "./Devices/Instantiators";
 
 export const app: express.Application = express();
 
@@ -68,25 +69,8 @@ noble.on('stateChange', state => {
 });
 
 noble.on( 'discover', (peripheral: noble.Peripheral) => {
-    const device = new BLEDevice(peripheral);
-    devices.push( device );
-
-    /*var i, nobleType, brickType, object
-        , name	= peripheral.advertisement ? peripheral.advertisement.localName : peripheral.address
-        , brick 	;
-    console.log("Discover BLE", peripheral.id, name);
-    for(i=0; i<L_types.length; i++) {
-        nobleType = L_types[i].nobleType;
-        brickType = L_types[i].brickType;
-        if(nobleType.is(peripheral)) {
-            if(nobleType !== brickType) {
-                object = new nobleType(peripheral);
-            } else {object = peripheral;}
-            brick 	= new brickType(peripheral.id, object);
-        }
+    const device = instantiatePeripheral(peripheral);
+    if (device) {
+        devices.push(device);
     }
-    if(!brick) {brick = new BrickBLE(peripheral.id, peripheral);}
-    server.BLE_server.bricks.push( brick );
-    server.emit("update_BrickBLE_sever", {bricks: server.getDescription().BLE_server.bricks});
-    */
 });
