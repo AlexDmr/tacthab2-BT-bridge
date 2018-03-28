@@ -38,13 +38,13 @@ export class MetaWear extends BLEDevice {
                 this.buttonState.next(state);
             });
 
-        this.accelerometer  = new Accelerometer(this);
-        this.gyroscope      = new Gyroscope(this);
+        this.accelerometer  = new Accelerometer (this); this.accelerometer.enable({});
+        this.gyroscope      = new Gyroscope     (this); this.gyroscope.enable    ({});
 
-        this.stateObserver = Observable.combineLatest( [
-            this.buttonState,
-            this.accelerometer.getAccelerationObservable(),
-            this.gyroscope.getGyroMeasureObservable()
+        this.stateObserver = Observable.merge( [
+            this.buttonState.map( p => ({buttonPressed: p}) ) ,
+            this.accelerometer.getAccelerationObservable().map( A => ({acc: A}) ),
+            this.gyroscope.getGyroMeasureObservable().map(G => ({gyr: G}) )
         ] );
     }
 
@@ -72,7 +72,36 @@ export class MetaWear extends BLEDevice {
         return super.disconnect();
     }
 
+    startNotifying(sensor: SENSOR) {
+        this.switchNotifying(sensor, true);
+    }
+
+    stopNotifying(sensor: SENSOR) {
+        this.switchNotifying(sensor, false);
+    }
+
+    private switchNotifying(sensor: SENSOR, on: boolean) {
+        switch (sensor) {
+            case "accelerometer":
+                if (on) {
+                    this.accelerometer.notify();
+                } else {
+                    this.accelerometer.unnotify();
+                }
+                break;
+            case "gyroscope":
+                if (on) {
+                    this.gyroscope.notify();
+                } else {
+                    this.gyroscope.unnotify();
+                }
+                break;
+        }
+    }
 }
+
+export type SENSOR = "accelerometer" | "gyroscope";
+
 
 registerBleInstanciator( (peripheral: noble.Peripheral) => {
     const localName: string = peripheral.advertisement ? peripheral.advertisement.localName : "";

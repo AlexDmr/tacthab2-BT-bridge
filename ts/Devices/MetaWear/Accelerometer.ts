@@ -52,7 +52,6 @@ export class Accelerometer {
     private accelerations = new BehaviorSubject<ACCELERATION>(undefined);
 
     constructor(private device: MetaWear) {
-        this.enable({});
         device
             .getNotifications()
             .filter( N => N.module === defs.modules.ACCELEROMETER_OPCODE)
@@ -126,9 +125,10 @@ export class Accelerometer {
         return this.device.writeCharacteristic(defs.COMMAND_UUID, buffer_subscribeAcc);
     }
 
-    unnotify() {
+    async unnotify() {
         console.log( "BrickMetaWear::unnotifyAccelerometer" );
-        return this.device.writeCharacteristic(defs.COMMAND_UUID, buffer_unnotifyAccelerometer);
+        await this.device.writeCharacteristic(defs.COMMAND_UUID, buffer_unnotifyAccelerometer);
+        this.accelerations.next(undefined);
     }
 
 }

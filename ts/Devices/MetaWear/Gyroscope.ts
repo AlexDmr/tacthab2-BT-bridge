@@ -47,7 +47,6 @@ export class Gyroscope {
     private gyroscope_scale: number;
 
     constructor(private device: MetaWear) {
-        this.enable({});
         device
             .getNotifications()
             .filter( N => N.module === defs.modules.GYRO)
@@ -95,7 +94,7 @@ export class Gyroscope {
         const buffer = new Buffer(4); // Configure gyroscope
         buffer[0] = defs.modules.GYRO;
         buffer[1] = defs.GyroBmi160Register.CONFIG;
-        buffer[2] = config.gyr_odr | (config.gyr_bwp << 4)
+        buffer[2] = config.gyr_odr | (config.gyr_bwp << 4);
         buffer[3] = config.gyr_range;
 
         return 	this.device.writeCharacteristic(defs.COMMAND_UUID, buffer);
@@ -113,9 +112,10 @@ export class Gyroscope {
         return this.device.writeCharacteristic(defs.COMMAND_UUID, bufferSubscribe 		);
     }
 
-    unnotify() {
+    async unnotify() {
         console.log( "BrickMetaWear::unnotifyGyroscope" );
-        return this.device.writeCharacteristic(defs.COMMAND_UUID, buffer_unnotifyGyroscope);
+        await this.device.writeCharacteristic(defs.COMMAND_UUID, buffer_unnotifyGyroscope);
+        this.gyroMeasures.next(undefined);
     }
 }
 

@@ -76,6 +76,10 @@ export class BLEDevice {
         }
     }
 
+    getStateObserver(): Observable<any> {
+        return undefined;
+    }
+
     getNotifications(): Observable<CHARACTERISTIC_NOTIFICATION> {
         return this.notifications.asObservable().filter(N => !!N);
     }

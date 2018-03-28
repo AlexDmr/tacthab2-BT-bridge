@@ -28,6 +28,8 @@ const BT_state = {
 };
 
 /* Define REST API */
+app.use("/htmlClient", express.static('public'));
+
 app.get("/", (req, res) => {
     res.json( {state: BT_state, devices: devices.map(D => D.toJSON()) } );
 });
@@ -70,6 +72,22 @@ app.post("/connect", connectToDevice);
 
 /* Define Socket.IO API */
 const ioHTTP  = socketIO(serverHTTP );
+ioHTTP.on("connection", socket => {
+    socket.emit("devices", devices );
+    // socket.on("disconnect", () => delSocketSubject.next(socket));
+    socket.on("call", (call: CALL, cb) => {
+        const {deviceId, method, arguments: Largs} = call;
+        const device = devices.find( D => D.getUUID() === deviceId );
+        if (!device) {
+            Promise.resolve().then(() => device[method].apply(device, Largs)).then(
+                res => cb({success: res}),
+                err => cb({error: err, device, method, Largs})
+            );
+        } else {
+            cb({error: `There is no brick identified by ${deviceId}`});
+        }
+    });
+});
 
 function updateBTState( update: {[key: string]: any}) {
     Object.assign(BT_state, update);
@@ -95,5 +113,14 @@ noble.on( 'discover', (peripheral: noble.Peripheral) => {
     const device = instantiatePeripheral(peripheral);
     if (device) {
         devices.push(device);
+        ioHTTP.emit("state", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
+        device.getStateObserver().subscribe( O => ioHTTP.emit(device.getUUID(), O) );
     }
 });
+
+
+type CALL = {
+    deviceId: string;
+    method: string;
+    arguments: any[];
+};
