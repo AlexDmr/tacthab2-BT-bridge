@@ -18,7 +18,7 @@ export class MetaWear extends BLEDevice {
     protected metaWearNotifications: Observable<METAWEAR_NOTIFICATION>;
     protected buttonState = new BehaviorSubject<boolean>(undefined);
     protected stateObserver: Observable<any>;
-    protected accelerometer = new Accelerometer(this);
+    protected accelerometer: Accelerometer;
 
     constructor(peripheral: noble.Peripheral) {
         super(peripheral);
@@ -35,6 +35,8 @@ export class MetaWear extends BLEDevice {
                 const state = N.data.readUInt8(2) === 1;
                 this.buttonState.next(state);
             });
+
+        this.accelerometer = new Accelerometer(this);
 
         this.stateObserver = Observable.combineLatest( [
             this.buttonState,
