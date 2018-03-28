@@ -4,6 +4,7 @@ import * as defs from "./BrickMetaWear_defs";
 import {BehaviorSubject, Observable} from "@reactivex/rxjs";
 import {registerBleInstanciator} from "../Instantiators";
 import {Accelerometer} from "./Accelerometer";
+import {Gyroscope} from "./Gyroscope";
 
 const bufferSubscribeSwitch = new Buffer(3);
 bufferSubscribeSwitch[0] = 1;
@@ -19,6 +20,7 @@ export class MetaWear extends BLEDevice {
     protected buttonState = new BehaviorSubject<boolean>(undefined);
     protected stateObserver: Observable<any>;
     protected accelerometer: Accelerometer;
+    protected gyroscope: Gyroscope;
 
     constructor(peripheral: noble.Peripheral) {
         super(peripheral);
@@ -36,11 +38,13 @@ export class MetaWear extends BLEDevice {
                 this.buttonState.next(state);
             });
 
-        this.accelerometer = new Accelerometer(this);
+        this.accelerometer  = new Accelerometer(this);
+        this.gyroscope      = new Gyroscope(this);
 
         this.stateObserver = Observable.combineLatest( [
             this.buttonState,
-            this.accelerometer.getAccelerationObservable()
+            this.accelerometer.getAccelerationObservable(),
+            this.gyroscope.getGyroMeasureObservable()
         ] );
     }
 

@@ -52,17 +52,19 @@ export class Accelerometer {
     private accelerations = new BehaviorSubject<ACCELERATION>(undefined);
 
     constructor(private device: MetaWear) {
-        device  .getNotifications()
-                .filter( N => N.module === defs.modules.ACCELEROMETER_OPCODE)
-                .filter( N => N.eventType === defs.AccelerometerBmi160Register.DATA_INTERRUPT )
-                .subscribe( ({data}) => {
-                    const x = data.readInt16LE(2) / this.accelerometer_scale;
-                    const y = data.readInt16LE(4) / this.accelerometer_scale;
-                    const z = data.readInt16LE(6) / this.accelerometer_scale;
+        this.enable({});
+        device
+            .getNotifications()
+            .filter( N => N.module === defs.modules.ACCELEROMETER_OPCODE)
+            .filter( N => N.eventType === defs.AccelerometerBmi160Register.DATA_INTERRUPT )
+            .subscribe( ({data}) => {
+                const x = data.readInt16LE(2) / this.accelerometer_scale;
+                const y = data.readInt16LE(4) / this.accelerometer_scale;
+                const z = data.readInt16LE(6) / this.accelerometer_scale;
 
-                    console.log( "accelerometerChange", {x:x, y:y, z:z} );
-                    this.accelerations.next( {x:x, y:y, z:z} );
-                } );
+                console.log( "accelerometerChange", {x:x, y:y, z:z} );
+                this.accelerations.next( {x:x, y:y, z:z} );
+            } );
     }
 
     getAccelerationObservable(): Observable<ACCELERATION> {
