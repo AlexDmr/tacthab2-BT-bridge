@@ -38,8 +38,8 @@ export class MetaWear extends BLEDevice {
                 this.buttonState.next(state);
             });
 
-        this.accelerometer  = new Accelerometer (this); this.accelerometer.enable({});
-        this.gyroscope      = new Gyroscope     (this); this.gyroscope.enable    ({});
+        this.accelerometer  = new Accelerometer (this);// this.accelerometer.enable({});
+        this.gyroscope      = new Gyroscope     (this);// this.gyroscope.enable    ({});
 
         this.stateObserver = Observable.merge( [
             this.buttonState.map( p => ({buttonPressed: p}) ) ,
