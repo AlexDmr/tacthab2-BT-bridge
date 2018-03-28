@@ -28,7 +28,7 @@ export class BLEDevice {
         peripheral.on  ('connect'		, () => {
             this.isConnected.next(true);
         });
-        peripheral.once('disconnect'	, function() {
+        peripheral.once('disconnect'	, () => {
             this.isConnected.next(false);
         });
     }
@@ -48,7 +48,13 @@ export class BLEDevice {
             services: this.services ? this.services.map(S => ({
 				name: S.name,
 				uuid: S.uuid,
-				type: S.type
+				type: S.type,
+                characteristics: S.characteristics.map( C => ({
+                    name: C.name,
+                    uuid: C.uuid,
+                    type: C.type,
+                    properties: C.properties
+                }) )
             }) ) : [],
             characteristics: this.characteristics ? this.characteristics.map(C => ({
 				name: C.name,

@@ -3,6 +3,7 @@ import * as noble from "noble";
 import * as defs from "./BrickMetaWear_defs";
 import {BehaviorSubject, Observable} from "@reactivex/rxjs";
 import {registerBleInstanciator} from "../Instantiators";
+import {Accelerometer} from "./Accelerometer";
 
 const bufferSubscribeSwitch = new Buffer(3);
 bufferSubscribeSwitch[0] = 1;
@@ -17,6 +18,7 @@ export class MetaWear extends BLEDevice {
     protected metaWearNotifications: Observable<METAWEAR_NOTIFICATION>;
     protected buttonState = new BehaviorSubject<boolean>(undefined);
     protected stateObserver: Observable<any>;
+    protected accelerometer = new Accelerometer(this);
 
     constructor(peripheral: noble.Peripheral) {
         super(peripheral);
@@ -34,15 +36,34 @@ export class MetaWear extends BLEDevice {
                 this.buttonState.next(state);
             });
 
-        this.stateObserver = Observable.combineLatest( [this.buttonState] );
+        this.stateObserver = Observable.combineLatest( [
+            this.buttonState,
+            this.accelerometer.getAccelerationObservable()
+        ] );
     }
 
-    getNotifications(): Observable<CHARACTERISTIC_NOTIFICATION> {
+    getAccelerometer(): Accelerometer {
+        return this.accelerometer;
+    }
+
+    getNotifications(): Observable<METAWEAR_NOTIFICATION> {
         return this.metaWearNotifications;
     }
 
     getStateObserver(): Observable<any> {
         return this.stateObserver;
+    }
+
+    async connect() {
+        await super.connect();
+        await this.notifyCharacteristic(defs.NOTIFY_UUID, true);
+        return this.writeCharacteristic(defs.COMMAND_UUID, bufferSubscribeSwitch);
+    }
+
+    async disconnect() {
+        // clearInterval( this.temperature.timer );
+        await this.notifyCharacteristic(defs.NOTIFY_UUID, false);
+        return super.disconnect();
     }
 
 }
@@ -52,56 +73,16 @@ registerBleInstanciator( (peripheral: noble.Peripheral) => {
     // console.log( "Is", localName, "a metawear device ?" );
     if (localName && localName.toLocaleLowerCase() === 'metawear') {
 		console.log( "CREATE a METAWEAR !" );
-        return new MetaWear(peripheral);
+        const mw = new MetaWear(peripheral);
+        mw.getStateObserver().subscribe( state => console.log(state) );
+        mw.connect().then(
+            () => {
+                mw.getAccelerometer().notify();
+            },
+            err => console.error("error connecting to metawear device", err)
+        );
+        return mw;
     } else {
         return undefined;
     }
 });
-
-/*
-BrickMetaWear.is 	= function(peripheral) {
-  var localName = peripheral.advertisement?peripheral.advertisement.localName:"";
-  localName = localName || "";
-  return localName.toLocaleLowerCase() === 'metawear';
-}
-
-BrickMetaWear.prototype = Object.create(BrickBLE.prototype); // new Brick(); BrickUPnP.prototype.unreference();
-BrickMetaWear.prototype.constructor	= BrickMetaWear;
-BrickMetaWear.prototype.getTypeName	= function() {return "BrickMetaWear";}
-BrickMetaWear.prototype.getTypes	= function() {var L = BrickBLE.prototype.getTypes(); 
-												  L.push(BrickMetaWear.prototype.getTypeName()); 
-												  return L;}
-BrickMetaWear.prototype.registerType('BrickMetaWear', BrickMetaWear.prototype);
-
-accelerometer 	( BrickMetaWear.prototype );
-magnetometer	( BrickMetaWear.prototype );
-temperature		( BrickMetaWear.prototype );
-luminometer		( BrickMetaWear.prototype );
-gyroscope 		( BrickMetaWear.prototype );
-barometer 		( BrickMetaWear.prototype );
-LED 			( BrickMetaWear.prototype );
-//____________________________________________________________________________________________________
-// Connection
-//____________________________________________________________________________________________________
-BrickMetaWear.prototype.connect 		= function() {
-	var brick = this;
-	return BrickBLE.prototype.connect.apply(this, []).then( function() {
-		brick.notifyCharacteristic(defs.NOTIFY_UUID, true);
-	}).then( function() {
-		brick.writeCharacteristic(defs.COMMAND_UUID, bufferSubscribeSwitch);
-	})
-}
-
-BrickMetaWear.prototype.disconnect	= function() {
-	clearInterval( this.temperature.timer );
-	return this.notifyCharacteristic(defs.NOTIFY_UUID, false).then( function() {
-				BrickBLE.prototype.disconnect.apply(this, [])
-			});
-}
-
-//____________________________________________________________________________________________________
-// Exports
-//____________________________________________________________________________________________________
-module.exports = BrickMetaWear;
-
-*/
