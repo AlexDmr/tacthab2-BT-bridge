@@ -3,6 +3,7 @@ import * as http from "http";                   // HTTP server
 import * as bodyParser from "body-parser";      // Parse HTTP GET and POST variables
 import * as socketIO from "socket.io";          // Websocket server
 import * as noble from "noble";
+import * as path from "path";
 import {BLEDevice} from "./Devices/BLE";
 import {instantiatePeripheral} from "./Devices/Instantiators";
 import "./Devices/MetaWear/BrickMetaWear";
@@ -28,7 +29,8 @@ const BT_state = {
 };
 
 /* Define REST API */
-app.use("/htmlClient", express.static('public'));
+const pathClient = path.join(__dirname, "../htmlClient");
+app.use("/htmlClient", express.static(pathClient));
 
 app.get("/", (req, res) => {
     res.json( {state: BT_state, devices: devices.map(D => D.toJSON()) } );
