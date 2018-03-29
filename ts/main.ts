@@ -73,7 +73,7 @@ app.post("/connect", connectToDevice);
 /* Define Socket.IO API */
 const ioHTTP  = socketIO(serverHTTP );
 ioHTTP.on("connection", socket => {
-    socket.emit("devices", devices );
+    ioHTTP.emit("bridgeState", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
     // socket.on("disconnect", () => delSocketSubject.next(socket));
     socket.on("call", (call: CALL, cb) => {
         const {deviceId, method, arguments: Largs} = call;
@@ -113,8 +113,10 @@ noble.on( 'discover', (peripheral: noble.Peripheral) => {
     const device = instantiatePeripheral(peripheral);
     if (device) {
         devices.push(device);
-        ioHTTP.emit("state", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
-        device.getStateObserver().subscribe( O => ioHTTP.emit(device.getUUID(), O) );
+        ioHTTP.emit("bridgeState", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
+        device.getStateObserver().subscribe(
+            O => ioHTTP.emit("deviceUpdate", {uuid: device.getUUID(), O} )
+        );
     }
 });
 

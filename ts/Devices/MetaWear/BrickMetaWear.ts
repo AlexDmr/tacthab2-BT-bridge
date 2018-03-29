@@ -109,6 +109,7 @@ registerBleInstanciator( (peripheral: noble.Peripheral) => {
     if (localName && localName.toLocaleLowerCase() === 'metawear') {
 		console.log( "CREATE a METAWEAR !" );
         const mw = new MetaWear(peripheral);
+        /*
         mw.getStateObserver().subscribe( state => console.log(state) );
         mw.connect().then(
             () => {
@@ -116,6 +117,7 @@ registerBleInstanciator( (peripheral: noble.Peripheral) => {
             },
             err => console.error("error connecting to metawear device", err)
         );
+        */
         return mw;
     } else {
         return undefined;
