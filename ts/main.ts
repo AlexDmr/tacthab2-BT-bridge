@@ -80,13 +80,17 @@ ioHTTP.on("connection", socket => {
     socket.on("call", (call: CALL, cb) => {
         const {deviceId, method, arguments: Largs} = call;
         const device = devices.find( D => D.getUUID() === deviceId );
-        if (!device) {
+        if (device) {
             Promise.resolve().then(() => device[method].apply(device, Largs)).then(
-                res => cb({success: res}),
-                err => cb({error: err, device, method, Largs})
+                res => cb ? cb({success: res}) : undefined,
+                err => cb ? cb({error: err, device, method, Largs}) : undefined
             );
         } else {
-            cb({error: `There is no brick identified by ${deviceId}`});
+			console.error( `There is no brick identified by ${deviceId}` );
+			devices.forEach( D => console.error( `\t* ${D.getUUID()}` ) );
+            if (cb) {
+				cb({error: `There is no brick identified by ${deviceId}`});
+			}
         }
     });
 });
