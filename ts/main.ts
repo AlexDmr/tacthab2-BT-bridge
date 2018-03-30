@@ -117,7 +117,7 @@ noble.on( 'discover', (peripheral: noble.Peripheral) => {
         devices.push(device);
         ioHTTP.emit("bridgeState", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
         device.getStateObserver().subscribe(
-            O => ioHTTP.emit("deviceUpdate", {uuid: device.getUUID(), O} )
+            update => ioHTTP.emit("deviceUpdate", {uuid: device.getUUID(), update} )
         );
     }
 });
