@@ -13,9 +13,15 @@ socket.on("bridgeState", bridgeState => {
     });
 });
 
-socket.on("deviceUpdate", deviceUpdate => {
+socket.on("deviceConnectedUpdate", connected => {
     const device = mapDevices.get( deviceUpdate.uuid );
-    console.log("deviceUpdate:", deviceUpdate);
+    device.isConnected = connected;
+    updateDeviceSection( deviceUpdate.uuid );
+});
+
+socket.on("deviceStateUpdate", deviceUpdate => {
+    const device = mapDevices.get( deviceUpdate.uuid );
+    // console.log("deviceUpdate:", deviceUpdate);
     for(let key in deviceUpdate.update) {
         const val = deviceUpdate.update[key];
         device.state[key] = val;
@@ -31,12 +37,12 @@ function updateDeviceSection(uuid) {
         div = document.createElement("div");
         div.classList.add("device");
         document.body.appendChild(div);
+        mapDeviceSections.set(uuid, div);
     }
     let str = `Device ${uuid}<br/>
 				isConnected: ${D.isConnected}
 				<button class="connect">Toggle connection</button>
 				<br/>
-				
 				`;
     for(let key in D.state) {
         const val = JSON.stringify( D.state[key] );

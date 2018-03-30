@@ -75,7 +75,7 @@ app.post("/connect", connectToDevice);
 /* Define Socket.IO API */
 const ioHTTP  = socketIO(serverHTTP );
 ioHTTP.on("connection", socket => {
-    ioHTTP.emit("bridgeState", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
+    emitBTState();
     // socket.on("disconnect", () => delSocketSubject.next(socket));
     socket.on("call", (call: CALL, cb) => {
         const {deviceId, method, arguments: Largs} = call;
@@ -97,7 +97,8 @@ ioHTTP.on("connection", socket => {
 
 function updateBTState( update: {[key: string]: any}) {
     Object.assign(BT_state, update);
-    ioHTTP.emit( "updateBTState", update );
+    // ioHTTP.emit( "updateBTState", update );
+    emitBTState();
 }
 
 noble.on('scanStart', () => {
@@ -119,13 +120,19 @@ noble.on( 'discover', (peripheral: noble.Peripheral) => {
     const device = instantiatePeripheral(peripheral);
     if (device) {
         devices.push(device);
-        ioHTTP.emit("bridgeState", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
+        emitBTState();
         device.getStateObserver().subscribe(
-            update => ioHTTP.emit("deviceUpdate", {uuid: device.getUUID(), update} )
+            update => ioHTTP.emit("deviceStateUpdate", {uuid: device.getUUID(), update} )
+        );
+        device.getIsConnected().obs.subscribe(
+            connected => ioHTTP.emit("deviceConnectedUpdate", {uuid: device.getUUID(), connected} )
         );
     }
 });
 
+function emitBTState() {
+    ioHTTP.emit("bridgeState", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
+}
 
 type CALL = {
     deviceId: string;
