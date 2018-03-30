@@ -49,7 +49,7 @@ export type ACCELERATION = {
 
 export class Accelerometer {
     private accelerometer_scale = 2048;
-    private accelerations = new BehaviorSubject<ACCELERATION>(undefined);
+    private accelerations = new BehaviorSubject<ACCELERATION>(null);
 
     constructor(private device: MetaWear) {
         device
@@ -68,6 +68,10 @@ export class Accelerometer {
 
     getAccelerationObservable(): Observable<ACCELERATION> {
         return this.accelerations.asObservable();
+    }
+
+    getValue(): ACCELERATION {
+        return this.accelerations.getValue();
     }
 
     start() {

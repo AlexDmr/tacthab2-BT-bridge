@@ -43,7 +43,7 @@ export type GYROMEASURE = {
 };
 
 export class Gyroscope {
-    private gyroMeasures = new BehaviorSubject<GYROMEASURE>(undefined);
+    private gyroMeasures = new BehaviorSubject<GYROMEASURE>(null);
     private gyroscope_scale: number;
 
     constructor(private device: MetaWear) {
@@ -63,6 +63,10 @@ export class Gyroscope {
 
     getGyroMeasureObservable(): Observable<GYROMEASURE> {
         return this.gyroMeasures.asObservable();
+    }
+
+    getValue(): GYROMEASURE {
+        return this.gyroMeasures.getValue();
     }
 
     start() {
