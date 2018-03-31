@@ -26,7 +26,7 @@ socket.on("deviceStateUpdate", deviceUpdate => {
         const val = deviceUpdate.update[key];
         device.state[key] = val;
     }*/
-    device.state = {...device.state, ...update};
+    device.state = {...device.state, ...deviceUpdate.update};
     updateDeviceSection( deviceUpdate.uuid );
 });
 
