@@ -125,7 +125,7 @@ noble.on( 'discover', (peripheral: noble.Peripheral) => {
             update => ioHTTP.emit("deviceStateUpdate", {uuid: device.getUUID(), update} )
         );
         device.getIsConnected().obs.subscribe(
-            connected => ioHTTP.emit("deviceConnectedUpdate", {uuid: device.getUUID(), connected} )
+            isConnected => ioHTTP.emit("deviceConnectedUpdate", {uuid: device.getUUID(), isConnected} )
         );
     }
 });

@@ -45,6 +45,8 @@ export class BLEDevice {
             name: this.name,
             uuid: this.peripheral.uuid,
             isConnected: this.isConnected.getValue(),
+            deviceType: "UNKNOWN",
+            state: {},
             services: this.services ? this.services.map(S => ({
 				name: S.name,
 				uuid: S.uuid,
@@ -76,7 +78,7 @@ export class BLEDevice {
         }
     }
 
-    getStateObserver(): Observable<any> {
+    getStateObserver(): Observable<{[key: string]: any}> {
         return undefined;
     }
 

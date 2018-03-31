@@ -13,19 +13,20 @@ socket.on("bridgeState", bridgeState => {
     });
 });
 
-socket.on("deviceConnectedUpdate", connected => {
+socket.on("deviceConnectedUpdate", deviceUpdate => {
     const device = mapDevices.get( deviceUpdate.uuid );
-    device.isConnected = connected;
+    device.isConnected = deviceUpdate.isConnected;
     updateDeviceSection( deviceUpdate.uuid );
 });
 
 socket.on("deviceStateUpdate", deviceUpdate => {
     const device = mapDevices.get( deviceUpdate.uuid );
     // console.log("deviceUpdate:", deviceUpdate);
-    for(let key in deviceUpdate.update) {
+    /*for(let key in deviceUpdate.update) {
         const val = deviceUpdate.update[key];
         device.state[key] = val;
-    }
+    }*/
+    device.state = {...device.state, ...update};
     updateDeviceSection( deviceUpdate.uuid );
 });
 

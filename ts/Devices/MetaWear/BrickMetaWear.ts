@@ -18,7 +18,7 @@ export type METAWEAR_NOTIFICATION = CHARACTERISTIC_NOTIFICATION & {module: numbe
 export class MetaWear extends BLEDevice {
     protected metaWearNotifications: Observable<METAWEAR_NOTIFICATION>;
     protected buttonState = new BehaviorSubject<boolean>(null);
-    protected stateObserver: Observable<any>;
+    protected stateObserver: Observable<{[key: string]: any}>;
     protected accelerometer: Accelerometer;
     protected gyroscope: Gyroscope;
 
@@ -38,8 +38,8 @@ export class MetaWear extends BLEDevice {
                 this.buttonState.next(state);
             });
 
-        this.accelerometer  = new Accelerometer (this);// this.accelerometer.enable({});
-        this.gyroscope      = new Gyroscope     (this);// this.gyroscope.enable    ({});
+        this.accelerometer  = new Accelerometer (this);
+        this.gyroscope      = new Gyroscope     (this);
 
         this.stateObserver = Observable.merge(
             this.buttonState.map( p => ({buttonPressed: p}) ) ,
@@ -51,6 +51,7 @@ export class MetaWear extends BLEDevice {
     toJSON() {
         return {
             ...super.toJSON(),
+            deviceType: "METAWEAR",
             state: {
                 buttonPressed: this.buttonState.getValue(),
                 acc: this.accelerometer.getValue(),
