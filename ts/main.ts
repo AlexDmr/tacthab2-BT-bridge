@@ -4,7 +4,7 @@ import * as bodyParser from "body-parser";      // Parse HTTP GET and POST varia
 import * as socketIO from "socket.io";          // Websocket server
 import * as noble from "noble";
 import * as path from "path";
-import {BLEDevice} from "./Devices/BLE";
+import {getDevices} from "./Devices/BLE";
 import {instantiatePeripheral} from "./Devices/Instantiators";
 import "./Devices/MetaWear/BrickMetaWear";
 
@@ -20,8 +20,6 @@ serverHTTP.listen(portHTTP, () => {
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({extended: true}));
 
-const devices: BLEDevice[] = [];
-
 const BT_state = {
     isOn: false,
     scanning: false,
@@ -33,28 +31,33 @@ const pathClient = path.join(__dirname, "../htmlClient");
 app.use("/htmlClient", express.static(pathClient));
 
 app.get("/", (req, res) => {
-    res.json( {state: BT_state, devices: devices.map(D => D.toJSON()) } );
+    res.json( {state: BT_state, devices: getDevices().map(D => D.toJSON()) } );
 });
 
-app.post("/scanning", (req, res) => {
-    const scanning = !!req.body["scanning"];
+app.post("/scanning", ScanBLE);
+app.get ("/scanning", ScanBLE);
+function ScanBLE(req, res) {
+    const scanning = !!( req.body["on"] || req.query["on"] );
     if (scanning) {
-        noble.startScanning( err => {
+        noble.startScanning([], true, err => {
             if (err) {
                 BT_state.err = err.toString();
+                res.end( `ERROR: ${BT_state.err}` );
             } else {
                 updateBTState( {scanning: true} );
+                res.end("STARTED");
             }
         });
     } else {
         noble.stopScanning();
+        res.end("STOPPED");
     }
-});
+}
 
 function connectToDevice(req, res) {
 	const uuid = req.query["uuid"] || req.body["uuid"];
 	if (uuid) {
-		const device = devices.find( D => D.getUUID() === uuid );
+		const device = getDevices().find( D => D.getUUID() === uuid );
 		if (device) {
 			device.connect().then(
 				() => res.json( device.toJSON() ),
@@ -79,7 +82,7 @@ ioHTTP.on("connection", socket => {
     // socket.on("disconnect", () => delSocketSubject.next(socket));
     socket.on("call", (call: CALL, cb) => {
         const {deviceId, method, arguments: Largs} = call;
-        const device = devices.find( D => D.getUUID() === deviceId );
+        const device = getDevices().find( D => D.getUUID() === deviceId );
         if (device) {
             Promise.resolve().then(() => device[method].apply(device, Largs)).then(
                 res => cb ? cb({success: res}) : undefined,
@@ -87,7 +90,7 @@ ioHTTP.on("connection", socket => {
             );
         } else {
 			console.error( `There is no brick identified by ${deviceId}` );
-			devices.forEach( D => console.error( `\t* ${D.getUUID()}` ) );
+			getDevices().forEach( D => console.error( `\t* ${D.getUUID()}` ) );
             if (cb) {
 				cb({error: `There is no brick identified by ${deviceId}`});
 			}
@@ -111,15 +114,14 @@ noble.on('scanStop', () => {
 
 noble.on('stateChange', state => {
     if(state === "poweredOn") {
-        noble.startScanning();
+        noble.startScanning([], true);
     }
 });
 
 noble.on( 'discover', (peripheral: noble.Peripheral) => {
-    console.log("Discover", peripheral.advertisement, peripheral.uuid);
+    // console.log("Discover", peripheral.advertisement, peripheral.uuid);
     const device = instantiatePeripheral(peripheral);
     if (device) {
-        devices.push(device);
         emitBTState();
         device.getStateObserver().subscribe(
             update => ioHTTP.emit("deviceStateUpdate", {uuid: device.getUUID(), update} )
@@ -131,7 +133,7 @@ noble.on( 'discover', (peripheral: noble.Peripheral) => {
 });
 
 function emitBTState() {
-    ioHTTP.emit("bridgeState", {state: BT_state, devices: devices.map(D => D.toJSON()) } );
+    ioHTTP.emit("bridgeState", {state: BT_state, devices: getDevices().map(D => D.toJSON()) } );
 }
 
 type CALL = {

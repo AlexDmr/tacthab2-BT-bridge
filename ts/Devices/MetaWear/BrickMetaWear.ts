@@ -1,4 +1,4 @@
-import {BLEDevice, CHARACTERISTIC_NOTIFICATION} from "../BLE";
+import {BLEDevice, CHARACTERISTIC_NOTIFICATION, getDeviceFromUUID} from "../BLE";
 import * as noble from "noble";
 import * as defs from "./BrickMetaWear_defs";
 import {BehaviorSubject, Observable} from "@reactivex/rxjs";
@@ -116,10 +116,15 @@ export type SENSOR = "accelerometer" | "gyroscope";
 
 
 registerBleInstanciator( (peripheral: noble.Peripheral) => {
+	const uuid = peripheral.uuid;
     const localName: string = peripheral.advertisement ? peripheral.advertisement.localName : "";
     // console.log( "Is", localName, "a metawear device ?" );
-    if (localName && localName.toLocaleLowerCase() === 'metawear') {
-		console.log( "CREATE a METAWEAR !" );
+    if (localName && localName.toLocaleLowerCase() === 'metawear' ) {
+		if (getDeviceFromUUID(uuid)) {
+			// console.log( "Discard already existing BLE", uuid);
+			return undefined;
+		}
+		console.log( "CREATE a METAWEAR !", uuid );
         const mw = new MetaWear(peripheral);
         /*
         mw.getStateObserver().subscribe( state => console.log(state) );

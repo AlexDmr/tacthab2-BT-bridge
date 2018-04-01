@@ -61,7 +61,7 @@ export class Accelerometer {
                 const y = data.readInt16LE(4) / this.accelerometer_scale;
                 const z = data.readInt16LE(6) / this.accelerometer_scale;
 
-                console.log( "accelerometerChange", {x:x, y:y, z:z} );
+                // console.log( "accelerometerChange", {x:x, y:y, z:z} );
                 this.accelerations.next( {x:x, y:y, z:z} );
             } );
     }

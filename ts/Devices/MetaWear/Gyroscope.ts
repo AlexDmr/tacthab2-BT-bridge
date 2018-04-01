@@ -44,7 +44,8 @@ export type GYROMEASURE = {
 
 export class Gyroscope {
     private gyroMeasures = new BehaviorSubject<GYROMEASURE>(null);
-    private gyroscope_scale: number;
+    private gyroscope_scale = FSR_SCALE[ defs.MblMwGyroBmi160Range.MBL_MW_GYRO_BMI160_FSR_2000DPS ];
+
 
     constructor(private device: MetaWear) {
         device
@@ -56,7 +57,7 @@ export class Gyroscope {
                 const beta  = data.readInt16LE(4) / this.gyroscope_scale;
                 const gamma = data.readInt16LE(6) / this.gyroscope_scale;
 
-                console.log( "gyro", {alpha, beta, gamma} );
+                // console.log( "gyro", {alpha, beta, gamma} );
                 this.gyroMeasures.next( {alpha, beta, gamma} );
             } );
     }
@@ -94,7 +95,7 @@ export class Gyroscope {
 
         this.gyroscope_scale = FSR_SCALE[ config.gyr_range ];
 
-        console.log( "BrickMetaWear::enableGyroscope" );
+        console.log( "BrickMetaWear::enableGyroscope", this.gyroscope_scale, "/", config.gyr_range );
         const buffer = new Buffer(4); // Configure gyroscope
         buffer[0] = defs.modules.GYRO;
         buffer[1] = defs.GyroBmi160Register.CONFIG;

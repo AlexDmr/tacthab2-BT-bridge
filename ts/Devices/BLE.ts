@@ -7,6 +7,10 @@ export function getDevices(): BLEDevice[] {
     return devices;
 }
 
+export function getDeviceFromUUID(uuid: string): BLEDevice {
+	return devices.find( D => D.getUUID() === uuid );
+}
+
 export type CharacteristicValue = {
     data: Buffer;
     length: number,
@@ -25,6 +29,7 @@ export class BLEDevice {
 
     constructor(protected peripheral: noble.Peripheral) {
         this.name = peripheral.advertisement ? peripheral.advertisement.localName : peripheral.address;
+        devices.push( this );
         peripheral.on  ('connect'		, () => {
             this.isConnected.next(true);
         });
@@ -34,9 +39,13 @@ export class BLEDevice {
     }
 
     async dispose() {
-        if(this.isConnected) {
+        if(this.isConnected.getValue()) {
             await this.disconnect();
         }
+        devices.splice( devices.indexOf(this), 1 );
+        console.log( "removing BLE", this.getUUID(), "\nremaining",
+			devices.map( D => D.getUUID() )
+		);
         this.peripheral = null;
     }
 
@@ -95,8 +104,11 @@ export class BLEDevice {
             return new Promise<void>( (resolve, reject) => {
                 this.peripheral.disconnect( (error?) => {
                     if(error) {
+						// console.error("ERROR:", this.getUUID(), "disconnect", error);
                         reject(error);
                     } else {
+						// console.log("SUCCESS:", this.getUUID(), "disconnect");
+						this.isConnected.next( false );
                         resolve();
                     }
                 });
@@ -112,19 +124,21 @@ export class BLEDevice {
                         console.error("ERROR connect", err);
                         reject(err);
                     } else {
-                        if (this.services === undefined) {
+                        // if (false && this.services === undefined) {
                             this.peripheral.discoverAllServicesAndCharacteristics((err, services, characteristics) => {
                                 if (err) {
+									console.error("ERROR:", this.getUUID(), "connect", err);
                                     reject(err);
                                 } else {
                                     this.services = services;
                                     this.characteristics = characteristics;
+                                    // console.log("SUCCESS:", this.getUUID(), "connect");
                                     resolve();
                                 }
                             });
-                        } else {
-                            resolve();
-                        }
+                        // } else {
+                        //    resolve();
+                        // }
                     }
                 });
             });
